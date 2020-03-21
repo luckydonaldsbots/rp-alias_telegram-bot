@@ -21,7 +21,7 @@ from teleflask.new_messages import TextMessage
 from teleflask.messages import HTMLMessage
 from teleflask.server import Teleflask
 
-from .secrets import API_KEY
+from .secrets import API_KEY, HOSTNAME
 from .sentry import add_error_reporting
 
 __author__ = 'luckydonald'
@@ -34,7 +34,6 @@ app.register_blueprint(version_bp)
 sentry = add_error_reporting(app)
 
 bot = Teleflask(API_KEY, app)
-bot.register_tblueprint(version_tbp)
 # bot.on_startup(set_up_mongodb)
 bot.register_tblueprint(version_tbp)
 
@@ -53,8 +52,9 @@ def url_healthcheck():
     return 'kk', 200
 # end def
 
-@app.route("/bot_webhooks/{int:user_id}/{base64_prefix}/{api_key}")
-def other_bot_updates(self, user_id: int, base64_prefix: str, api_key: str):
+
+@app.route("/rp_bot_webhooks/<int:user_id>/<base64_prefix>/<base64_api_key>", methods=['POST'])
+def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
     """
     This processes incoming telegram updates.
 
@@ -70,14 +70,14 @@ def other_bot_updates(self, user_id: int, base64_prefix: str, api_key: str):
     update = Update.from_array(request.get_json())
     if not update.message:
         logger.debug('not an message')
-        return
+        return "OK"
     # end if
     msg: TGMessage = update.message
     if msg.from_peer.id != user_id:
-        logger.debug('not an message of an legit user')
+        logger.info('not an message of an legit user')
     if not msg.text and not msg.caption:
-        logger.debug('not an message with text/caption')
-        return
+        logger.info('not an message with text/caption')
+        return "OK"
     # end if
 
     if msg.text:
@@ -87,45 +87,59 @@ def other_bot_updates(self, user_id: int, base64_prefix: str, api_key: str):
     # end if
     prefix = n(urlsafe_b64decode(base64_prefix))
     if not text.startswith(prefix):
-        logger.debug('not the prefix')
-        return
+        logger.info(f'text has not the prefix {prefix!r}: {text!r}')
+        return "OK"
     # end if
 
     # remove the prefix from the text
     text = text[len(prefix):].strip()
-    message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
+    chat_id = msg.chat.id
+    message_id = msg.message_id
+    reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
 
+    api_key = n(urlsafe_b64decode(b(base64_api_key)))
     rp_bot = Bot(api_key)
     try:
         if msg.text:
             rp_bot.send_message(
                 text=text,
-                chat_id=msg.chat.id, parse_mode='markdownv2',
-                disable_notification=False, reply_to_message_id=message_id,
+                chat_id=chat_id, parse_mode='markdownv2',
+                disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
         if msg.photo:
             rp_bot.send_photo(
                 photo=msg.photo[0].file_id,
-                chat_id=msg.chat.id, parse_mode='markdownv2',
-                disable_notification=False, reply_to_message_id=message_id,
+                chat_id=chat_id, parse_mode='markdownv2',
+                disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
         if msg.document:
             rp_bot.send_document(
                 document=msg.document.file_id,
-                chat_id=msg.chat.id, parse_mode='markdownv2',
-                disable_notification=False, reply_to_message_id=message_id,
+                chat_id=chat_id, parse_mode='markdownv2',
+                disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
     except TgApiServerException as e:
         logger.warn('sending failed', exc_info=True)
     # end try
-    return
+    try:
+        bot.bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except TgApiServerException as e:
+        logger.debug('deletion with bot.bot failed', exc_info=True)
+    # end try
+
+    try:
+        rp_bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except TgApiServerException as e:
+        logger.debug('deletion with rp_bot failed', exc_info=True)
+    # end try
+    return "OK"
 # end def
 
 
-@bot.command("start")  # /start {chat_id}_{do_not_track}
+@bot.command("start")
 def start(update, text):
     return TextMessage('hello.', parse_mode="html")
 # end def
@@ -147,13 +161,16 @@ def help_cmd(update: Update, text: str):
 
 @bot.command("add_bot")
 def cmd_set_welcome(update, text):
+    if not text:
+        text = ""  # fix None.split(…)
+    # end if
     texts = text.split('\n')
     if len(texts) != 2:
         text = None  # cheap way to get the error message.^
-    # end if
-    if not text[0] or not text[1]:
+    elif not text[0] or not text[1]:
         text = None  # cheap way to get the error message.
-    # end def
+    # end if
+
     if not text:
         return "Please send your bot and prefix like this:\n" \
                "<pre>/add_bot {API-KEY}\n" \
@@ -161,11 +178,13 @@ def cmd_set_welcome(update, text):
                "So on the line with the /add_bot you put your bot API key, and on the second line the prefix you wanna use."
     # end if
     api_key, prefix = texts
-    prefix = n(urlsafe_b64encode(b(prefix)))
+    prefix_based = n(urlsafe_b64encode(b(prefix)))
+    api_key_based = n(urlsafe_b64encode(b(api_key)))
     rp_bot = Bot(api_key)
     try:
         rp_me = rp_bot.get_me()
-        webhook_url = url_for('other_bot_updates', user_id=update.message.from_peer.id, base64_prefix=prefix, api_key=api_key)
+        webhook_url = url_for('rp_bot_webhooks', user_id=update.message.from_peer.id, base64_prefix=prefix_based, base64_api_key=api_key_based)
+        webhook_url = f"https://{HOSTNAME}{webhook_url}"
         logger.debug(f'setting webhook to {webhook_url!r}')
         rp_bot.set_webhook(webhook_url)
         return (

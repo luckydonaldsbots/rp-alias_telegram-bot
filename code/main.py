@@ -1,1 +1,1 @@
-from rules_rules.main import app
+from rp_alias.main import app
