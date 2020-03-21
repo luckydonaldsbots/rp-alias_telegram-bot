@@ -1,0 +1,12 @@
+luckydonald-utils==0.72  # always good to have
+DictObject>=0.1.3  # good too
+flask  # webserver
+pytgbot>=2.3.2  # bot api
+
+# teleflask==2.0.0  # telegram bot, flask-like!
+-e git://github.com/luckydonald/teleflask.git@2bde5b70051467282862f2c5d32c80127b956073#egg=teleflask_2bde5b  # 2.0.0.dev7, Next: 2.0.0  # 2018-07-22 Blueprints
+
+raven[flask]  # debug
+emoji
+pymongo
+
