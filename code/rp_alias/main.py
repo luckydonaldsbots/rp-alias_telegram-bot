@@ -99,25 +99,87 @@ def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
 
     api_key = n(urlsafe_b64decode(b(base64_api_key)))
     rp_bot = Bot(api_key)
+
+    if message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text):
+        return 'OK'
+    # end if
+
+    message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text)
+    return "OK"
+# end def
+
+
+def message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text):
+    """
+
+    :param api_key:
+    :param chat_id:
+    :param msg:
+    :param rp_bot:
+    :param text:
+    :return: if we had to act, or at least tried. I.e. if it should not be echoed.
+    """
+    rmsg = msg.reply_to_message
+    rp_bot_id = int(api_key.split(":")[0])
+    if not msg.text or not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
+        return False  # not relevant
+    # end if
+    # they replied to a message of the rp_bot.
+    try:
+        try:
+            rp_bot.delete_message(  # delete /delete or edit command message.
+                message_id=message_id, chat_id=chat_id,
+            )
+        except TgApiServerException as e:
+            logger.warn('deleting edit message failed', exc_info=True)
+        # end try
+
+        if text == "/delete":
+            rp_bot.delete_message(
+                message_id=rmsg.message_id, chat_id=chat_id,
+            )
+            return True  # we did
+        elif rmsg.text:
+            # text message
+            rp_bot.edit_message_text(
+                text=text, parse_mode='',
+                message_id=rmsg.message_id, chat_id=chat_id,
+            )
+            return True  # we did
+        elif rmsg.caption or rmsg.photo or rmsg.document:
+            rp_bot.edit_message_caption(
+                caption=text, parse_mode='',
+                message_id=rmsg.message_id, chat_id=chat_id,
+            )
+            return True  # we did
+        # end if
+    except TgApiServerException as e:
+        logger.warn('editing failed', exc_info=True)
+        return True  # we did try
+    # end try
+    pass
+
+
+def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text):
     try:
         if msg.text:
             rp_bot.send_message(
                 text=text,
-                chat_id=chat_id, parse_mode='markdownv2',
+                chat_id=chat_id, parse_mode='',
                 disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
         if msg.photo:
             rp_bot.send_photo(
                 photo=msg.photo[0].file_id,
-                chat_id=chat_id, parse_mode='markdownv2',
+                chat_id=chat_id, parse_mode='',
                 disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
         if msg.document:
             rp_bot.send_document(
                 document=msg.document.file_id,
-                chat_id=chat_id, parse_mode='markdownv2',
+                chat_id=chat_id, parse_mode='',
                 disable_notification=False, reply_to_message_id=reply_to_message_id,
             )
         # end if
@@ -129,19 +191,19 @@ def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
     except TgApiServerException as e:
         logger.debug('deletion with bot.bot failed', exc_info=True)
     # end try
-
     try:
         rp_bot.delete_message(chat_id=chat_id, message_id=message_id)
     except TgApiServerException as e:
         logger.debug('deletion with rp_bot failed', exc_info=True)
     # end try
-    return "OK"
+
+
 # end def
 
 
 @bot.command("start")
 def start(update, text):
-    return TextMessage('hello.', parse_mode="html")
+    return HTMLMessage('Hello. Do you seek /help?')
 # end def
 
 
@@ -149,11 +211,11 @@ def start(update, text):
 def help_cmd(update: Update, text: str):
     assert isinstance(update, Update)
     return HTMLMessage(
-        'currently, I\'m not helpful.\n'
-        'But go ahead, set up your bot you wanna use for RPing with @BotFather.\n'
-        'You can set up a profile picture there too (<code>/setuserpic</code>).\n'
-        'Make sure you\'re set up the privacy of your bot (<code>/setprivacy</code>) to disabled, so it can receive your messages.'
-        ' The alternative is to use the @username of your bot as an prefix when registering your bot.\n\n'
+        'Go ahead, set up your bot you wanna use for RPing with @BotFather first:\n'
+        'Write <code>/addbot</code> to @BotFather, set your name and a username (e.g. <code>CharacterName_RPBot</code>).\n'
+        'You can set up a profile picture there too with <code>/setuserpic</code>.\n'
+        'Make sure you\'re set up the privacy of your bot (<code>/setprivacy</code>) to disabled, so this service can receive your messages.'
+        ' The alternative is to use the @username (in our example <code>@CharacterName_RPBot</code> of your bot as an prefix when registering your bot.\n\n'
         'After that, use /add_bot.'
     )
 # end def
@@ -172,10 +234,15 @@ def cmd_set_welcome(update, text):
     # end if
 
     if not text:
-        return "Please send your bot and prefix like this:\n" \
-               "<pre>/add_bot {API-KEY}\n" \
-               "{PREFIX}</pre>\n" \
-               "So on the line with the /add_bot you put your bot API key, and on the second line the prefix you wanna use."
+        return HTMLMessage(
+            "Please send your bot and prefix like this:\n"
+            "<pre>/add_bot {API-KEY}\n"
+            "{PREFIX}</pre>\n"
+            "So on the line with the /add_bot you put your bot API key, "
+            "and on the second line the prefix you wanna use.\n"
+            "\n"
+            "<i>For example, if you have a character called Littlepip, you co"
+        )
     # end if
     api_key, prefix = texts
     prefix_based = n(urlsafe_b64encode(b(prefix)))
@@ -190,8 +257,8 @@ def cmd_set_welcome(update, text):
         return (
             f"Successfully registered {rp_me.first_name}.\n"
             f"Start any message with {prefix!r} to have it be replied by the bot.\n"
-            f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} in the chat you're roleplaying"
-            f", it will delete your original message automatically."
+            f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} as admin in the chat you're "
+            f"roleplaying in, it will delete your original message automatically."
         )
     except TgApiServerException as e:
         return f"Error: {e!s}"
