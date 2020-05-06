@@ -9,6 +9,7 @@ from luckydonaldUtils.logger import logging
 from luckydonaldUtils.encoding import to_native as n, to_binary as b
 from luckydonaldUtils.tg_bots.gitinfo import version_bp, version_tbp
 from pytgbot import Bot
+from pytgbot.api_types.sendable.inline import InlineQueryResultArticle, InputTextMessageContent
 from pytgbot.exceptions import TgApiServerException
 
 logging.add_colored_handler(level=logging.DEBUG)
@@ -53,8 +54,8 @@ def url_healthcheck():
 # end def
 
 
-@app.route("/rp_bot_webhooks/<int:user_id>/<base64_prefix>/<base64_api_key>", methods=['POST'])
-def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
+@app.route("/rp_bot_webhooks/<int:admin_user_id>/<base64_prefix>/<base64_api_key>", methods=['POST'])
+def rp_bot_webhooks(admin_user_id: int, base64_prefix: str, base64_api_key: str):
     """
     This processes incoming telegram updates.
 
@@ -68,24 +69,84 @@ def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
         request.headers if hasattr(request, "headers") else None
     ))
     update = Update.from_array(request.get_json())
-    if not update.message:
-        logger.debug('not an message')
+    if not update.message and not update.inline_query:
+        logger.debug('not an message or inline_query')
         return "OK"
     # end if
+
+
+    prefix = n(urlsafe_b64decode(base64_prefix))
+    api_key = n(urlsafe_b64decode(b(base64_api_key)))
+    rp_bot = Bot(api_key)
+
+    if update.inline_query:
+        inline_query = update.inline_query
+        if inline_query.from_peer.id != admin_user_id:
+            rp_bot.answer_inline_query(inline_query_id=inline_query.id, results=[])
+            return 'OK'
+        # end if
+        text = inline_query.query
+        id = urlsafe_b64encode(text)
+        rp_bot.answer_inline_query(inline_query_id=inline_query.id, results=[
+            InlineQueryResultArticle(
+                id=id, title='Send as this character',
+                input_message_content=InputTextMessageContent(
+                    message_text=text,
+                    parse_mode='',
+                    disable_web_page_preview=True,
+                )
+            )
+        ])
+        return 'OK'
+    # end if
+
+    assert update.message
     msg: TGMessage = update.message
-    if msg.from_peer.id != user_id:
-        logger.info('not an message of an legit user')
     if not msg.text and not msg.caption:
         logger.info('not an message with text/caption')
         return "OK"
     # end if
 
+    if msg.chat.type == 'private':
+        return process_private_chat(msg, admin_user_id, prefix, rp_bot)
+    else:
+        return process_public_prefix(msg, admin_user_id, prefix, rp_bot)
+    # end def
+# end def
+
+
+def process_private_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot: Bot):
+    assert msg.chat.id == msg.from_peer.id
+    if msg.text and msg.text == '/start':
+        help_cmd(
+            update=Update(update_id=-1, message=msg), text=''
+        ).send(rp_bot)
+    # end if
+    if msg.from_peer != admin_user_id:
+        # other user want to send something to us.
+        rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
+    else:
+        # we wrote the bot
+        if msg.reply_to_message and msg.reply_to_message.forward_from:
+            # we replied to a forwarded message.
+            copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
+        else:
+            # we wrote the bot, not as reply -> return as if prefixed.
+            copy_message(chat_id=msg.from_peer.id, msg=msg, reply_to_message_id=msg.message_id, rp_bot=rp_bot)
+        # end if
+    # end if
+# end def
+
+
+def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot: Bot):
+    if msg.from_peer.id != admin_user_id:
+        logger.info('not an message of an legit user')
+    # end if
     if msg.text:
         text = msg.text
     else:
         text = msg.caption
     # end if
-    prefix = n(urlsafe_b64decode(base64_prefix))
     if not text.startswith(prefix):
         logger.info(f'text has not the prefix {prefix!r}: {text!r}')
         return "OK"
@@ -96,9 +157,6 @@ def rp_bot_webhooks(user_id: int, base64_prefix: str, base64_api_key: str):
     chat_id = msg.chat.id
     message_id = msg.message_id
     reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
-
-    api_key = n(urlsafe_b64decode(b(base64_api_key)))
-    rp_bot = Bot(api_key)
 
     if message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text):
         return 'OK'
@@ -158,31 +216,12 @@ def message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text
         return True  # we did try
     # end try
     pass
+# end def
 
 
 def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text):
     try:
-        if msg.text:
-            rp_bot.send_message(
-                text=text,
-                chat_id=chat_id, parse_mode='',
-                disable_notification=False, reply_to_message_id=reply_to_message_id,
-            )
-        # end if
-        if msg.photo:
-            rp_bot.send_photo(
-                photo=msg.photo[0].file_id,
-                chat_id=chat_id, parse_mode='',
-                disable_notification=False, reply_to_message_id=reply_to_message_id,
-            )
-        # end if
-        if msg.document:
-            rp_bot.send_document(
-                document=msg.document.file_id,
-                chat_id=chat_id, parse_mode='',
-                disable_notification=False, reply_to_message_id=reply_to_message_id,
-            )
-        # end if
+        copy_message(chat_id, msg, reply_to_message_id, rp_bot, text)
     except TgApiServerException as e:
         logger.warn('sending failed', exc_info=True)
     # end try
@@ -196,8 +235,36 @@ def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_
     except TgApiServerException as e:
         logger.debug('deletion with rp_bot failed', exc_info=True)
     # end try
+# end def
 
 
+def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str, None] = None):
+    if not text:
+        text = msg.text if msg.text else msg.caption
+    # end def
+    if msg.text:
+        return rp_bot.send_message(
+            text=text,
+            chat_id=chat_id, parse_mode='',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.photo:
+        return rp_bot.send_photo(
+            photo=msg.photo[0].file_id,
+            chat_id=chat_id, parse_mode='',
+            caption=text,
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.document:
+        return rp_bot.send_document(
+            document=msg.document.file_id,
+            chat_id=chat_id, parse_mode='',
+            caption=text,
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
 # end def
 
 
