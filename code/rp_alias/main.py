@@ -127,7 +127,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         reply_chat, reply_msg = bot.msg_get_reply_params(update)
         # noinspection PyProtectedMember
         msg._apply_update_receiver(receiver=reply_chat, reply_id=reply_msg)
-        msg.send()
+        msg.send(rp_bot)
     # end if
     if msg.from_peer != admin_user_id:
         # other user want to send something to us.
