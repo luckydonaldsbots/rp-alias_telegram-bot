@@ -108,30 +108,38 @@ def rp_bot_webhooks(admin_user_id: int, base64_prefix: str, base64_api_key: str)
     # end if
 
     if msg.chat.type == 'private':
-        return process_private_chat(msg, admin_user_id, prefix, rp_bot)
+        return process_private_chat(update, admin_user_id, prefix, rp_bot)
     else:
         return process_public_prefix(msg, admin_user_id, prefix, rp_bot)
     # end def
 # end def
 
 
-def process_private_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot: Bot):
+def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot: Bot):
+    msg = update.message
     assert msg.chat.id == msg.from_peer.id
     if msg.text and msg.text == '/start':
-        help_cmd(
-            update=Update(update_id=-1, message=msg), text=''
-        ).send(rp_bot)
+        # somebody typed the /start command.
+        logger.debug('somebody typed the /start command.')
+        foo = help_cmd(
+            update=Update(update_id=-1, message=msg), text='',
+        )
+        bot.process_result(update, foo)  # does `foo.send(rp_bot)` for us.
     # end if
     if msg.from_peer != admin_user_id:
         # other user want to send something to us.
+        logger.debug('other user want to send something to us.')
         rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
     else:
         # we wrote the bot
+        logger.debug('owner wrote the bot.')
         if msg.reply_to_message and msg.reply_to_message.forward_from:
             # we replied to a forwarded message.
+            logger.debug('owner replied to message.')
             copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
         else:
             # we wrote the bot, not as reply -> return as if prefixed.
+            logger.debug('owner wrote the bot, not as reply -> return as if prefixed.')
             copy_message(chat_id=msg.from_peer.id, msg=msg, reply_to_message_id=msg.message_id, rp_bot=rp_bot)
         # end if
     # end if
