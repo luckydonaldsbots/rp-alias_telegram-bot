@@ -156,6 +156,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
 def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot: Bot):
     if msg.from_peer.id != admin_user_id:
         logger.info('not an message of an legit user')
+        return 'OK'
     # end if
     if msg.text:
         text = msg.text
