@@ -118,6 +118,9 @@ def rp_bot_webhooks(admin_user_id: int, base64_prefix: str, base64_api_key: str)
 def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot: Bot):
     msg = update.message
     assert msg.chat.id == msg.from_peer.id
+    logger.debug(
+        f'message user: {msg.from_peer.id}, admin user: {admin_user_id}, has forward: {msg.reply_to_message is not None}'
+    )
     if msg.text and msg.text == '/start':
         # somebody typed the /start command.
         logger.debug('somebody typed the /start command.')
@@ -129,7 +132,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         send_msg._apply_update_receiver(receiver=reply_chat, reply_id=reply_msg)
         send_msg.send(rp_bot)
     # end if
-    if msg.from_peer != admin_user_id:
+    if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
         logger.debug('other user want to send something to us.')
         rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
