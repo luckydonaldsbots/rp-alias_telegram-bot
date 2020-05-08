@@ -159,7 +159,7 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
     message_id = msg.message_id
     reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
 
-    if message_reply_edit_or_delete(rp_bot, chat_id, message_id, msg, rp_bot, text):
+    if message_reply_edit_or_delete(chat_id, message_id, msg, rp_bot, text):
         return 'OK'
     # end if
 
