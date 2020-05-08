@@ -135,6 +135,7 @@ def process_private_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot
             copy_message(chat_id=msg.from_peer.id, msg=msg, reply_to_message_id=msg.message_id, rp_bot=rp_bot)
         # end if
     # end if
+    return 'OK'
 # end def
 
 
@@ -158,7 +159,7 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
     message_id = msg.message_id
     reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
 
-    if message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text):
+    if message_reply_edit_or_delete(rp_bot, chat_id, message_id, msg, rp_bot, text):
         return 'OK'
     # end if
 
@@ -167,7 +168,7 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
 # end def
 
 
-def message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text):
+def message_reply_edit_or_delete(chat_id, message_id, msg, rp_bot: Bot, text):
     """
 
     :param api_key:
@@ -178,6 +179,7 @@ def message_reply_edit_or_delete(api_key, chat_id, message_id, msg, rp_bot, text
     :return: if we had to act, or at least tried. I.e. if it should not be echoed.
     """
     rmsg = msg.reply_to_message
+    api_key = rp_bot.api_key
     rp_bot_id = int(api_key.split(":")[0])
     if not msg.text or not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
         return False  # not relevant
