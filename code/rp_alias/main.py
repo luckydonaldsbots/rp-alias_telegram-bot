@@ -317,7 +317,7 @@ def cmd_set_welcome(update, text):
     rp_bot = Bot(api_key)
     try:
         rp_me = rp_bot.get_me()
-        webhook_url = url_for('rp_bot_webhooks', user_id=update.message.from_peer.id, base64_prefix=prefix_based, base64_api_key=api_key_based)
+        webhook_url = url_for('rp_bot_webhooks', admin_user_id=update.message.from_peer.id, base64_prefix=prefix_based, base64_api_key=api_key_based)
         webhook_url = f"https://{HOSTNAME}{webhook_url}"
         logger.debug(f'setting webhook to {webhook_url!r}')
         rp_bot.set_webhook(webhook_url)
