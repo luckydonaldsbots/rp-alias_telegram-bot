@@ -121,10 +121,13 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
     if msg.text and msg.text == '/start':
         # somebody typed the /start command.
         logger.debug('somebody typed the /start command.')
-        foo = help_cmd(
+        msg = help_cmd(
             update=Update(update_id=-1, message=msg), text='',
         )
-        bot.process_result(update, foo)  # does `foo.send(rp_bot)` for us.
+        reply_chat, reply_msg = bot.msg_get_reply_params(update)
+        # noinspection PyProtectedMember
+        msg._apply_update_receiver(receiver=reply_chat, reply_id=reply_msg)
+        msg.send()
     # end if
     if msg.from_peer != admin_user_id:
         # other user want to send something to us.
