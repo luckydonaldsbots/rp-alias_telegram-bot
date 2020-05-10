@@ -13,3 +13,9 @@ services:
       MONGO_PASSWORD: "1234secure"
       MONGO_DB: "rules_rules"
       HEALTHCHECK_URL: "/healthcheck"
+
+      MODULE_NAME: 'main'
+      VARIABLE_NAME: 'app'
+      APP_MODULE: 'main:app'
+      WORKERS_PER_CORE: 1
+      WEB_CONCURRENCY: 1
