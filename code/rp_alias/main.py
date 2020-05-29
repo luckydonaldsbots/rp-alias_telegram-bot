@@ -12,7 +12,6 @@ from pytgbot import Bot
 from pytgbot.api_types.sendable.inline import InlineQueryResultArticle, InputTextMessageContent
 from pytgbot.exceptions import TgApiServerException
 
-logging.add_colored_handler(level=logging.DEBUG)
 from pytgbot.api_types.receivable.updates import Update
 from pytgbot.api_types.receivable.updates import Message as TGMessage
 from pytgbot.api_types.receivable.peer import User as TGUser, Chat as TGChat
@@ -28,7 +27,7 @@ from .sentry import add_error_reporting
 __author__ = 'luckydonald'
 
 logger = logging.getLogger(__name__)
-logging.add_colored_handler(level=logging.DEBUG)
+logging. add_colored_handler(level=logging.DEBUG)
 
 app = Flask(__name__)
 app.register_blueprint(version_bp)
