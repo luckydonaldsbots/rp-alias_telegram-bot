@@ -323,8 +323,9 @@ def cmd_set_welcome(update, text):
             "{PREFIX}</pre>\n"
             "So on the line with the /add_bot you put your bot API key, "
             "and on the second line the prefix you wanna use.\n"
-            "\n"
-            "<i>For example, if you have a character called Littlepip, you co"
+            # "\n"
+            # "<i>For example, if you have a character called Littlepip, you could register the prefix <code>pip</code>.</i>\n"
+            # "<i>That would look like </i>"
         )
     # end if
     api_key, prefix = texts
