@@ -313,15 +313,15 @@ def help_cmd(update: Update, text: str):
         '<b>1.</b> Write <code>/addbot</code> to @BotFather, set your <u>character\'s name</u> and then a <u>fitting username</u>.\n'
         '<i>E.g.<code>Character Name</code> and then as username <code>CharacterName_RPBot</code></i>.\n'
         '\n'
-        '<b>2.</b>Make sure you\'re set up the <u>privacy of your bot</u> (<code>/setprivacy</code>) to <u>disabled</u>, so this service can receive your messages.\n'
-        'The alternative is to use the @username (in our example <code>@CharacterName_RPBot</code> of your bot as an prefix when registering your bot.\n'
+        '<b>2.</b> Make sure you\'re set up the <u>privacy of your bot</u> (<code>/setprivacy</code>) to <u>disabled</u>, so this service can receive your messages, even if you don\'t mention the bot\'s @username.\n'
+        '<i>The alternative, of you don\'t want to disavle the privacy mode, is to use the bot\'s @username (in our example <code>@CharacterName_RPBot</code> of your bot as the prefix later.</i>\n'
         '\n'
-        '<b>3.</b>You can set up a <u>profile picture</u> there too with <code>/setuserpic</code>.\n'
+        '<b>3.</b> You can set up a <u>profile picture</u> there too with <code>/setuserpic</code>.\n'
         '\n'
-        '<b>4.</b>It is helpful to others if you add a <u>about text</u> (bio) for your bot with <code>/setabouttext</code>.\n'
-        f'Usually they contain a description about the caracter, maybe a @username of the owner for direct contact, and a "Powered by @{bot.username}" would be really supportive!\n'
+        '<b>4.</b> It is helpful to others if you add a <u>about text</u> (bio) for your bot with <code>/setabouttext</code>.\n'
+        f'<i>Usually that should contain a description about the character, maybe a @username of the owner for direct contact and a "Powered by</i> @{bot.username}<i>" would be really supportive!</i>\n'
         '\n'
-        '<b>5.</b>After that, <u>come back to this bot</u> and use /add_bot to finally let it respond to message.'
+        '<b>5.</b> After that, <u>come back to this bot</u> and use /add_bot to finally let it listen and respond to messages.'
     )
 # end def
 
