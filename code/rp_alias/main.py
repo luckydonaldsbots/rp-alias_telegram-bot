@@ -176,7 +176,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
 
     if msg.from_peer.id != admin_user_id:
         # if someone replied to us, notify the owner.
-        if rmsg and rmsg.from_peer and rmsg.from_peer.id != rp_bot_id:
+        if rmsg and rmsg.from_peer and rmsg.from_peer.id == rp_bot_id:
             # is indeed a reply to this bot.
             logger.debug(f'is reply: from {msg.from_peer.id!r} to bot {rp_bot_id!r} of user {admin_user_id!r}.')
             chat_html = format_chat(msg.chat)
