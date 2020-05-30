@@ -1,5 +1,5 @@
 # luckydonald-utils
--e git://github.com/luckydonald/python-utils.git@10e9b79e22f2fc805db80f16c382fb05d317ba88#egg=luckydonald-utils
+-e git://github.com/luckydonald/python-utils.git@c6a43bad0a790187a044de976c38e4fcac13cf58#egg=luckydonald-utils
 
 # DictObject
 DictObject>=0.1.3
@@ -8,7 +8,7 @@ DictObject>=0.1.3
 flask
 
 # pytgbot
--e git://github.com/luckydonald/pytgbot.git@c6a43bad0a790187a044de976c38e4fcac13cf58#egg=pytgbot_c6a43b
+-e git://github.com/luckydonald/pytgbot.git@40b71dcd5e844ff0cce0f6182344f59c2805ef4a#egg=pytgbot_40b71d
 
 # teleflask
 -e git://github.com/luckydonald/teleflask.git@652cd1008f4b335b905599c4b4dd577d6e8f6a94#egg=teleflask_652cd1
