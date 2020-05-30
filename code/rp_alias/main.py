@@ -184,18 +184,26 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 msg.from_peer,
                 do_link=True, prefer_username=False, id_fallback=True, user_tag='b', id_tag='code', html_escape=True
             )
-            if msg.chat.username:
-                chat_link = msg.chat.username  # t.me/username
-            else:
-                # -1001309571967
-                # =>  1309571967
-                chat_link = str(msg.chat.id)
-                if chat_link.startswith('-100'):
-                    chat_link = chat_link[4:]
+
+            if msg.chat.type == 'supergroup':
+                if msg.chat.username:
+                    chat_link = msg.chat.username  # t.me/username
+                else:
+                    # -1001309571967
+                    # =>  1309571967
+                    # -303322960
+                    #
+                    chat_link = str(msg.chat.id)
+                    if chat_link.startswith('-100'):
+                        chat_link = chat_link[4:]
+                    # end if
+                    chat_link = "c/" + chat_link  # t.me/c/123456/123
                 # end if
-                chat_link = "c/" + chat_link  # t.me/c/123456/123
+                link_html = f'<a href="https://t.me/{chat_link}/{msg.message_id}">→ Go to message</a>'
+            else:
+                # regular groups don't support this.
+                link_html = ''
             # end if
-            link_html = f'<a href="https://t.me/{chat_link}/{msg.message_id}">→ Go to message</a>'
 
             try:
                 rp_bot.send_message(
@@ -203,7 +211,8 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                     text=(
                         f'In chat {chat_html} user {user_html} replied to this bot\'s message:\n'
                         f'{link_html}'
-                    )
+                    ),
+                    parse_mode='html'
                 )
             except:
                 logger.warning('failed to notify about reply', exc_info=True)
