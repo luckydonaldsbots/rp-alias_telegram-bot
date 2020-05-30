@@ -184,6 +184,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 msg.from_peer,
                 do_link=True, prefer_username=False, id_fallback=True, user_tag='b', id_tag='code', html_escape=True
             )
+            message_text = f'In chat {chat_html} user {user_html} replied to this bot\'s message'
 
             if msg.chat.type == 'supergroup':
                 if msg.chat.username:
@@ -199,19 +200,19 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                     # end if
                     chat_link = "c/" + chat_link  # t.me/c/123456/123
                 # end if
-                link_html = f'<a href="https://t.me/{chat_link}/{msg.message_id}">→ Go to message</a>'
+                message_text = (
+                    f'{message_text}:\n'
+                    f'<a href="https://t.me/{chat_link}/{msg.message_id}">→ Go to message</a>'
+                )
             else:
                 # regular groups don't support this.
-                link_html = ''
+                message_text = f'{message_text}.'
             # end if
 
             try:
                 rp_bot.send_message(
                     chat_id=admin_user_id,
-                    text=(
-                        f'In chat {chat_html} user {user_html} replied to this bot\'s message:\n'
-                        f'{link_html}'
-                    ),
+                    text=message_text,
                     parse_mode='html'
                 )
             except:
