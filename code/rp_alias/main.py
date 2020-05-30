@@ -175,12 +175,10 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
     rmsg = msg.reply_to_message
 
     if msg.from_peer.id != admin_user_id:
-        logger.info(f'not an message of an legit user: is {msg.from_peer.id!r}, should be {admin_user_id!r}.')
-
         # if someone replied to us, notify the owner.
-        if rmsg and rmsg.from_peer and not rmsg.from_peer.id == rp_bot_id:
+        if rmsg and rmsg.from_peer and rmsg.from_peer.id != rp_bot_id:
             # is indeed a reply to this bot.
-
+            logger.debug(f'is reply: from {msg.from_peer.id!r} to bot {rp_bot_id!r} of user {admin_user_id!r}.')
             chat_html = format_chat(msg.chat)
             user_html = format_user(
                 msg.from_peer,
@@ -210,7 +208,9 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
             except:
                 logger.warning('failed to notify about reply', exc_info=True)
             # end try
+            return 'OK'
         # end if
+        logger.info(f'not an message of an legit user: is {msg.from_peer.id!r}, should be {admin_user_id!r}.')
         return 'OK'  # we ignored or reacted.
     # end if
 
