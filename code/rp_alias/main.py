@@ -178,6 +178,65 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
     else:
         text = msg.caption
     # end if
+    chat_id = msg.chat.id
+    message_id = msg.message_id
+    reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
+
+    if text.startswith('/delete') or text.startswith('/edit'):
+        rmsg = msg.reply_to_message
+        rp_bot_id = int(rp_bot.api_key.split(":")[0])
+        if not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
+            logger.info(f'text is a \'/delete\' or \'/edit\' command, but reply is not existent or that message is not from  this bot ({rp_bot_id}): {text!r}')
+            return 'OK'  # not relevant
+        # end if
+
+        if text.startswith('/delete') and (
+            text == '/delete' or
+            text.startswith('/delete ') or
+            (text.startswith('/delete@') and text.startswith(f'/delete@{rp_bot.username}'))  # rp_bot.username is a costly API operation, so only do that if really needed.
+        ):
+            try:
+                rp_bot.delete_message(
+                    message_id=rmsg.message_id, chat_id=chat_id,
+                )
+                return 'OK'  # we're done
+            except:
+                logger.warning('deletion failed', exc_info=True)
+                return 'OK'  # at least we tried...
+            # end if
+        # end if
+        if text == '/edit':
+            # TODO: send 'You can't edit to empty, use /delete to delete.'
+            return 'OK'
+        if text.startswith('/edit') and (
+            text.startswith('/edit ') or
+            (text.startswith('/edit@') and text.startswith(f'/edit@{rp_bot.username} '))  # rp_bot.username is a costly API operation, so only do that if really needed.
+        ):
+            text = text.split(' ', maxsplit=1)[1].strip()  # remove the '/edit ' part of '/edit foo', including any following leading whitespaces.
+            try:
+                if rmsg.text:
+                    # text message
+                    rp_bot.edit_message_text(
+                        text=text, parse_mode='',
+                        message_id=rmsg.message_id, chat_id=chat_id,
+                    )
+                    return 'OK'  # we did it
+                elif rmsg.caption or rmsg.photo or rmsg.document:
+                    rp_bot.edit_message_caption(
+                        caption=text, parse_mode='',
+                        message_id=rmsg.message_id, chat_id=chat_id,
+                    )
+                    return 'OK'  # we did it
+                # end if
+                return 'OK'  # we're done
+            except:
+                logger.warning('edit failed', exc_info=True)
+                return 'OK'  # at least we tried...
+            # end if
+        # end if
+    # end if
+
+    # now we have the commands done, it's all about posting a new post.
     if not text.startswith(prefix):
         logger.info(f'text has not the prefix {prefix!r}: {text!r}')
         return "OK"
@@ -185,69 +244,8 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
 
     # remove the prefix from the text
     text = text[len(prefix):].strip()
-    chat_id = msg.chat.id
-    message_id = msg.message_id
-    reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
-
-    if message_reply_edit_or_delete(chat_id, message_id, msg, rp_bot, text):
-        return 'OK'
-    # end if
-
     message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text)
     return "OK"
-# end def
-
-
-def message_reply_edit_or_delete(chat_id, message_id, msg, rp_bot: Bot, text):
-    """
-
-    :param api_key:
-    :param chat_id:
-    :param msg:
-    :param rp_bot:
-    :param text:
-    :return: if we had to act, or at least tried. I.e. if it should not be echoed.
-    """
-    rmsg = msg.reply_to_message
-    api_key = rp_bot.api_key
-    rp_bot_id = int(api_key.split(":")[0])
-    if not msg.text or not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
-        return False  # not relevant
-    # end if
-    # they replied to a message of the rp_bot.
-    try:
-        try:
-            rp_bot.delete_message(  # delete /delete or edit command message.
-                message_id=message_id, chat_id=chat_id,
-            )
-        except TgApiServerException as e:
-            logger.warn('deleting edit message failed', exc_info=True)
-        # end try
-
-        if text == "/delete":
-            rp_bot.delete_message(
-                message_id=rmsg.message_id, chat_id=chat_id,
-            )
-            return True  # we did
-        elif rmsg.text:
-            # text message
-            rp_bot.edit_message_text(
-                text=text, parse_mode='',
-                message_id=rmsg.message_id, chat_id=chat_id,
-            )
-            return True  # we did
-        elif rmsg.caption or rmsg.photo or rmsg.document:
-            rp_bot.edit_message_caption(
-                caption=text, parse_mode='',
-                message_id=rmsg.message_id, chat_id=chat_id,
-            )
-            return True  # we did
-        # end if
-    except TgApiServerException as e:
-        logger.warn('editing failed', exc_info=True)
-        return True  # we did try
-    # end try
-    pass
 # end def
 
 
