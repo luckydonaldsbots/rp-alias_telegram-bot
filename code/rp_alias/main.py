@@ -121,13 +121,31 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         f'message user: {msg.from_peer.id}, admin user: {admin_user_id}, has forward: {msg.reply_to_message is not None}'
     )
     if msg.text and msg.text == '/start':
-        # somebody typed the /start command.
+        # somebody typed the /start command - that is either the owner or the user.
         logger.debug('somebody typed the /start command.')
-        rp_me = rp_bot.get_me()
-        rp_bot.send_msg(
-            f'<i>Greetings.\nYour communication with the owner of <b>{rp_me.first_name!r}</b> is now ready.</i>\n'
-            f'<i>Set up your own with</i> @{bot.username}<i>.</i>'
-        )
+        if msg.chat.id == admin_user_id:
+            # owner started the bot
+            send_msg = HTMLMessage(
+                f'<i>Greetings.\n'
+                f'This is your own bot, set up with the prefix {prefix!r}.\n'
+                f'Here I will forward you any messages from users writing to this bot directly.\n'
+                f'Reply to those messages to send them an answer.\n'
+                f'\n'
+                f'If it doesn\'t find the message you replied to (that is you didn\'t reply to any user, or the user\'s privacy settings disallow forwards) it will instead echo what you wrote.</i>'
+            )
+        else:
+            # other user started the bot
+            rp_me = rp_bot.get_me()
+            send_msg = HTMLMessage(
+                f'<i>Greetings.\n'
+                f'Your communication with the owner of <b>{rp_me.first_name!r}</b> is now ready.</i>\n'
+                f'<i>PS: You can set up your own with</i> @{bot.username}<i>.</i>'
+            )
+        # end if
+        reply_chat, reply_msg = bot.msg_get_reply_params(update)
+        # noinspection PyProtectedMember
+        send_msg._apply_update_receiver(receiver=reply_chat, reply_id=reply_msg)
+        send_msg.send(rp_bot)
     # end if
     if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
