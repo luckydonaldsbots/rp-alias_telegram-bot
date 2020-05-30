@@ -182,11 +182,12 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
     message_id = msg.message_id
     reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
 
+    rp_bot_id = int(rp_bot.api_key.split(":")[0])
+    rmsg = msg.reply_to_message
     if text.startswith('/delete') or text.startswith('/edit'):
-        rmsg = msg.reply_to_message
-        rp_bot_id = int(rp_bot.api_key.split(":")[0])
         if not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
             logger.info(f'text is a \'/delete\' or \'/edit\' command, but reply is not existent or that message is not from  this bot ({rp_bot_id}): {text!r}')
+            # TODO: maybe yell "reply this to a valid command", if it was not replied to something?
             return 'OK'  # not relevant
         # end if
 
@@ -238,7 +239,45 @@ def process_public_prefix(msg: TGMessage, admin_user_id: int, prefix: str, rp_bo
 
     # now we have the commands done, it's all about posting a new post.
     if not text.startswith(prefix):
-        logger.info(f'text has not the prefix {prefix!r}: {text!r}')
+        # not a suffix, so no posting.
+        # if someone replied to us, notify the owner.
+        if rmsg and rmsg.from_peer and not rmsg.from_peer.id == rp_bot_id:
+            # is indeed a reply to this bot.
+
+            from luckydonaldUtils.tg_bots.peer.chat.format import format_chat
+            from luckydonaldUtils.tg_bots.peer.user.format import format_user
+            chat_html = format_chat(msg.chat)
+            user_html = format_user(
+                msg.from_peer,
+                do_link=True, prefer_username=False, id_fallback=True, user_tag='b', id_tag='code', html_escape=True
+            )
+            if msg.chat.username:
+                chat_link = msg.chat.username  # t.me/username
+            else:
+                # -1001309571967
+                # =>  1309571967
+                chat_link = str(msg.chat.id)
+                if chat_link.startswith('-100'):
+                    chat_link = chat_link[4:]
+                # end if
+                chat_link = "c/" + chat_link  # t.me/c/123456/123
+            # end if
+            link_html = f'<a href="https://t.me/{chat_link}/{msg.message_id}">→ Go to message</a>'
+
+            try:
+                rp_bot.send_message(
+                    chat_id=admin_user_id,
+                    text=(
+                        f'In chat {chat_html} user {user_html} replied to this bot\'s message:\n'
+                        f'{link_html}'
+                    )
+                )
+            except:
+                logger.warning('failed to notify about reply', exc_info=True)
+            # end try
+        # end if
+
+        logger.info(f'text has not the reqired prefix {prefix!r}: {text!r}')
         return "OK"
     # end if
 
