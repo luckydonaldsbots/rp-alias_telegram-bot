@@ -127,7 +127,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
             # owner started the bot
             send_msg = HTMLMessage(
                 f'<i>Greetings.\n'
-                f'This is your own bot, set up with the prefix {prefix!r}.\n'
+                f'This is your own bot, set up with the prefix {escape(prefix)!r}.\n'
                 f'Here I will forward you any messages from users writing to this bot directly.\n'
                 f'Reply to those messages to send them an answer.\n'
                 f'\n'
@@ -138,7 +138,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
             rp_me = rp_bot.get_me()
             send_msg = HTMLMessage(
                 f'<i>Greetings.\n'
-                f'Your communication with the owner of <b>{rp_me.first_name!r}</b> is now ready.</i>\n'
+                f'Your communication with the owner of <b>{escape(rp_me.first_name)!r}</b> is now ready.</i>\n'
                 f'<i>PS: You can set up your own with</i> @{bot.username}<i>.</i>'
             )
         # end if
@@ -309,11 +309,19 @@ def help_cmd(update: Update, text: str):
     assert isinstance(update, Update)
     return HTMLMessage(
         'Go ahead, set up your bot you wanna use for RPing with @BotFather first:\n'
-        'Write <code>/addbot</code> to @BotFather, set your name and a username (e.g. <code>CharacterName_RPBot</code>).\n'
-        'You can set up a profile picture there too with <code>/setuserpic</code>.\n'
-        'Make sure you\'re set up the privacy of your bot (<code>/setprivacy</code>) to disabled, so this service can receive your messages.'
-        ' The alternative is to use the @username (in our example <code>@CharacterName_RPBot</code> of your bot as an prefix when registering your bot.\n\n'
-        'After that, use /add_bot.'
+        '\n'
+        '<b>1.</b> Write <code>/addbot</code> to @BotFather, set your <u>character\'s name</u> and then a <u>fitting username</u>.\n'
+        '<i>E.g.<code>Character Name</code> and then as username <code>CharacterName_RPBot</code></i>.\n'
+        '\n'
+        '<b>2.</b>Make sure you\'re set up the <u>privacy of your bot</u> (<code>/setprivacy</code>) to <u>disabled</u>, so this service can receive your messages.\n'
+        'The alternative is to use the @username (in our example <code>@CharacterName_RPBot</code> of your bot as an prefix when registering your bot.\n'
+        '\n'
+        '<b>3.</b>You can set up a <u>profile picture</u> there too with <code>/setuserpic</code>.\n'
+        '\n'
+        '<b>4.</b>It is helpful to others if you add a <u>about text</u> (bio) for your bot with <code>/setabouttext</code>.\n'
+        f'Usually they contain a description about the caracter, maybe a @username of the owner for direct contact, and a "Powered by @{bot.username}" would be really supportive!\n'
+        '\n'
+        '<b>5.</b>After that, <u>come back to this bot</u> and use /add_bot to finally let it respond to message.'
     )
 # end def
 
@@ -335,8 +343,8 @@ def cmd_set_welcome(update, text):
             "Please send your bot and prefix like this:\n"
             "<pre>/add_bot {API-KEY}\n"
             "{PREFIX}</pre>\n"
-            "So on the line with the /add_bot you put your bot API key, "
-            "and on the second line the prefix you wanna use.\n"
+            "So on the <b>same line with the /add_bot</b> you put your bot API key, "
+            "and on the <b>second line</b> the prefix you wanna use.\n"
             # "\n"
             # "<i>For example, if you have a character called Littlepip, you could register the prefix <code>pip</code>.</i>\n"
             # "<i>That would look like </i>"
@@ -354,9 +362,13 @@ def cmd_set_welcome(update, text):
         rp_bot.set_webhook(webhook_url)
         return (
             f"Successfully registered {rp_me.first_name}.\n"
-            f"Start any message with {prefix!r} to have it be replied by the bot.\n"
+            f"Start any message with <b>{escape(prefix)!r}</b> to have it be echoed by the bot.\n"
+            f"\n"
+            f"You can then reply with <code>/edit NEW TEXT</code> to a post by the bot to replace text or caption with <code>NEW TEXT</code>.\n"
+            f"Reply <code>/delete</code> to a message of the bot to have it deleted.\n"
+            f"\n"
             f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} as admin in the chat you're "
-            f"roleplaying in, it will delete your original message automatically."
+            f"roleplaying in, it will delete your original message (the one with the prefix) automatically."
         )
     except TgApiServerException as e:
         return f"Error: {e!s}"
