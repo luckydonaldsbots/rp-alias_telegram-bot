@@ -192,8 +192,6 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 else:
                     # -1001309571967
                     # =>  1309571967
-                    # -303322960
-                    #
                     chat_link = str(msg.chat.id)
                     if chat_link.startswith('-100'):
                         chat_link = chat_link[4:]
@@ -249,11 +247,11 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 rp_bot.delete_message(
                     message_id=rmsg.message_id, chat_id=chat_id,
                 )
-                return 'OK'  # we're done
             except:
-                logger.warning('deletion failed', exc_info=True)
-                return 'OK'  # at least we tried...
+                logger.warning('deletion of RP message failed', exc_info=True)
             # end if
+            failsafe_multibot_delete(rp_bot=rp_bot, message_id=message_id, chat_id=chat_id, of_something='/delete message')
+            return 'OK'  # we're done
         # end if
         if text == '/edit':
             # TODO: send 'You can't edit to empty, use /delete to delete.'
@@ -270,14 +268,13 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                         text=text, parse_mode='',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
-                    return 'OK'  # we did it
                 elif rmsg.caption or rmsg.photo or rmsg.document:
                     rp_bot.edit_message_caption(
                         caption=text, parse_mode='',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
-                    return 'OK'  # we did it
                 # end if
+                failsafe_multibot_delete(rp_bot=rp_bot, message_id=message_id, chat_id=chat_id, of_something='/edit message')
                 return 'OK'  # we're done
             except:
                 logger.warning('edit failed', exc_info=True)
@@ -306,15 +303,20 @@ def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_
     except TgApiServerException as e:
         logger.warn('sending failed', exc_info=True)
     # end try
+    failsafe_multibot_delete(rp_bot=rp_bot, message_id=message_id, chat_id=chat_id, of_something='original message')
+# end def
+
+
+def failsafe_multibot_delete(rp_bot, message_id, chat_id, of_something='message'):
     try:
         bot.bot.delete_message(chat_id=chat_id, message_id=message_id)
     except TgApiServerException as e:
-        logger.debug('deletion with bot.bot failed', exc_info=True)
+        logger.debug(f'deletion of {of_something} with bot.bot failed', exc_info=True)
     # end try
     try:
         rp_bot.delete_message(chat_id=chat_id, message_id=message_id)
     except TgApiServerException as e:
-        logger.debug('deletion with rp_bot failed', exc_info=True)
+        logger.debug(f'deletion of {of_something} with rp_bot failed', exc_info=True)
     # end try
 # end def
 
