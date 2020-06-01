@@ -23,6 +23,7 @@ from teleflask.new_messages import TextMessage
 from teleflask.messages import HTMLMessage
 from teleflask.server import Teleflask
 
+from .fake_reply import build_fake_reply
 from .secrets import API_KEY, HOSTNAME
 from .sentry import add_error_reporting
 
@@ -229,7 +230,12 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
     # end if
     chat_id = msg.chat.id
     message_id = msg.message_id
-    reply_to_message_id = msg.reply_to_message.message_id if msg.reply_to_message else None
+    reply_to_message_id = rmsg.message_id if rmsg else None
+
+    fake_reply = ''
+    if rmsg.from_peer.is_bot if rmsg else False:
+        fake_reply = build_fake_reply(chat_id=chat_id, name=rmsg.from_peer.first_name, reply_id=reply_to_message_id, old_text=rmsg.caption if rmsg.caption else rmsg.text)
+    # end if
 
     if text.startswith('/delete') or text.startswith('/edit'):
         if not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
@@ -265,12 +271,12 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 if rmsg.text:
                     # text message
                     rp_bot.edit_message_text(
-                        text=text, parse_mode='',
+                        text=fake_reply + text, parse_mode='',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
                 elif rmsg.caption or rmsg.photo or rmsg.document:
                     rp_bot.edit_message_caption(
-                        caption=text, parse_mode='',
+                        caption=fake_reply + text, parse_mode='',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
                 # end if
@@ -292,7 +298,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
 
     # remove the prefix from the text
     text = text[len(prefix):].strip()
-    message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text)
+    message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, fake_reply + text)
     return "OK"
 # end def
 
