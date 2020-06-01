@@ -45,7 +45,7 @@ def build_fake_reply(chat_id: Union[int, str], user_id: Union[int, str], name: s
 
 def remove_fake_reply(text: str) -> str:
     """ if it starts with two lines of fake reply, remove that; otherwise return unchanged. """
-    return REGEX.sub(text, '')
+    return REGEX.sub('', text)
 # end def
 
 
