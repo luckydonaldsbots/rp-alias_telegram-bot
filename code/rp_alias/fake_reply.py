@@ -18,7 +18,7 @@ BAR = '┃'
 ELLIPSIS = '…'
 MAX_LEN = 18
 
-REGEX_STR = rf'{BAR}.+{ELLIPSIS}{SPACES[0]}+\s*\n{BAR} .+\n'
+REGEX_STR = rf'{BAR}.*{SPACES[0]}+\s*\n{BAR} .+{ELLIPSIS}?\n'
 REGEX = re.compile(REGEX_STR)
 
 
