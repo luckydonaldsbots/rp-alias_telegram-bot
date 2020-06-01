@@ -23,7 +23,7 @@ REGEX = re.compile(REGEX_STR)
 
 
 def build_fake_reply(chat_id: Union[int, str], user_id: Union[int, str], name: str, reply_id: int, old_text: str) -> str:
-    old_text = remove_fake_reply(old_text)
+    old_text = remove_fake_reply(old_text).strip()
     chat_id = str(chat_id)
     assert chat_id.startswith('-100') or user_id
     if chat_id.startswith('-100'):
