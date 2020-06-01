@@ -35,7 +35,7 @@ def build_fake_reply(chat_id: Union[int, str], user_id: Union[int, str], name: s
         url = f'tg://user?id={user_id}'
     # end if
 
-    text = old_text[:MAX_LEN-1] + ELLIPSIS
+    text = old_text[:MAX_LEN-1] + ELLIPSIS if len(old_text) > MAX_LEN else old_text
     link = lambda t: f'<b><a href="{url}">{{text}}</a></b>'.format(text=escape(t))
     html = link(BAR + ' ' + name + SPACES + '\n' + BAR + ' ')
     html += text + '\n'
