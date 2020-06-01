@@ -22,13 +22,20 @@ REGEX_STR = rf'{BAR}.+{ELLIPSIS}{SPACES[0]}\s*+\n{BAR} .+\n'
 REGEX = re.compile(REGEX_STR)
 
 
-def build_fake_reply(chat_id: Union[int, str], name: str, reply_id: int, old_text: str) -> str:
+def build_fake_reply(chat_id: Union[int, str], user_id: Union[int, str], name: str, reply_id: int, old_text: str) -> str:
     old_text = remove_fake_reply(old_text)
     chat_id = str(chat_id)
-    assert chat_id.startswith('-100')
-    chat_id = chat_id[4:]
+    assert chat_id.startswith('-100') or user_id
+    if chat_id.startswith('-100'):
+        # supergroups support /c/ links
+        chat_id = chat_id[4:]
+        url = f't.me/c/{chat_id}/{reply_id}'
+    else:
+        # at least link the user (= bot)
+        url = f'tg://user?id={user_id}'
+    # end if
+
     text = old_text[:MAX_LEN-1] + ELLIPSIS
-    url = f't.me/c/{chat_id}/{reply_id}'
     link = lambda t: f'<b><a href="{url}">{{text}}</a></b>'.format(text=escape(t))
     html = link(BAR + ' ' + name + SPACES + '\n' + BAR + ' ')
     html += text + '\n'

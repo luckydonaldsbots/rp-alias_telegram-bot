@@ -234,7 +234,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
 
     fake_reply = ''
     if rmsg.from_peer.is_bot if rmsg else False:
-        fake_reply = build_fake_reply(chat_id=chat_id, name=rmsg.from_peer.first_name, reply_id=reply_to_message_id, old_text=rmsg.caption if rmsg.caption else rmsg.text)
+        fake_reply = build_fake_reply(chat_id=chat_id if rmsg.chat.type == 'supergroup' else None, user_id=rmsg.from_peer.id, name=rmsg.from_peer.first_name, reply_id=reply_to_message_id, old_text=rmsg.caption if rmsg.caption else rmsg.text)
     # end if
 
     if text.startswith('/delete') or text.startswith('/edit'):
