@@ -211,8 +211,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
             try:
                 rp_bot.send_message(
                     chat_id=admin_user_id,
-                    text=message_text,
-                    parse_mode='html'
+                    text=message_text, parse_mode='html',
                 )
             except:
                 logger.warning('failed to notify about reply', exc_info=True)
@@ -271,12 +270,12 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
                 if rmsg.text:
                     # text message
                     rp_bot.edit_message_text(
-                        text=fake_reply + text, parse_mode='',
+                        text=fake_reply + escape(text), parse_mode='html',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
                 elif rmsg.caption or rmsg.photo or rmsg.document:
                     rp_bot.edit_message_caption(
-                        caption=fake_reply + text, parse_mode='',
+                        caption=fake_reply + escape(text), parse_mode='html',
                         message_id=rmsg.message_id, chat_id=chat_id,
                     )
                 # end if
@@ -298,7 +297,7 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
 
     # remove the prefix from the text
     text = text[len(prefix):].strip()
-    message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, fake_reply + text)
+    message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, fake_reply + escape(text))
     return "OK"
 # end def
 
@@ -329,28 +328,28 @@ def failsafe_multibot_delete(rp_bot, message_id, chat_id, of_something='message'
 
 def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str, None] = None):
     if not text:
-        text = msg.text if msg.text else msg.caption
+        text = escape(msg.text) if msg.text else msg.caption
     # end def
     if msg.text:
         return rp_bot.send_message(
-            text=text,
-            chat_id=chat_id, parse_mode='',
+            text=text, parse_mode='html',
+            chat_id=chat_id,
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
     if msg.photo:
         return rp_bot.send_photo(
             photo=msg.photo[0].file_id,
-            chat_id=chat_id, parse_mode='',
-            caption=text,
+            chat_id=chat_id,
+            caption=text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
     if msg.document:
         return rp_bot.send_document(
             document=msg.document.file_id,
-            chat_id=chat_id, parse_mode='',
-            caption=text,
+            chat_id=chat_id,
+            caption=text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
