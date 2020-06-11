@@ -231,11 +231,6 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
     message_id = msg.message_id
     reply_to_message_id = rmsg.message_id if rmsg else None
 
-    fake_reply = ''
-    if rmsg.from_peer.is_bot and rmsg.from_peer.id != rp_bot_id if rmsg else False:
-        fake_reply = build_fake_reply(chat_id=chat_id if rmsg.chat.type == 'supergroup' else None, user_id=rmsg.from_peer.id, name=rmsg.from_peer.first_name, reply_id=reply_to_message_id, old_text=rmsg.caption if rmsg.caption else rmsg.text)
-    # end if
-
     if text.startswith('/delete') or text.startswith('/edit'):
         if not rmsg or not rmsg.from_peer or not rmsg.from_peer.id == rp_bot_id:
             logger.info(f'text is a \'/delete\' or \'/edit\' command, but reply is not existent or that message is not from  this bot ({rp_bot_id}): {text!r}')
@@ -266,6 +261,8 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
             (text.startswith('/edit@') and text.startswith(f'/edit@{rp_bot.username} '))  # rp_bot.username is a costly API operation, so only do that if really needed.
         ):
             text = text.split(' ', maxsplit=1)[1].strip()  # remove the '/edit ' part of '/edit foo', including any following leading whitespaces.
+            fake_reply = ''  # TODO: keep old reply.
+
             try:
                 if rmsg.text:
                     # text message
@@ -293,6 +290,11 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
         # not a suffix, so no posting.
         logger.info(f'text has not the required prefix {prefix!r}: {text!r}')
         return "OK"
+    # end if
+
+    fake_reply = ''
+    if rmsg.from_peer.is_bot and rmsg.from_peer.id != rp_bot_id if rmsg else False:
+        fake_reply = build_fake_reply(chat_id=chat_id if rmsg.chat.type == 'supergroup' else None, user_id=rmsg.from_peer.id, name=rmsg.from_peer.first_name, reply_id=reply_to_message_id, old_text=rmsg.caption if rmsg.caption else rmsg.text)
     # end if
 
     # remove the prefix from the text
