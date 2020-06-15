@@ -36,23 +36,23 @@ def build_reply_message(user_id: int, user_name: str, username: Union[str, None]
 
 # end def
 
-def detect_anon_user_id(msg: Message) -> Union[None, int]:
-    if msg.text and msg.text.startswith(ZERO_WIDTH_SPACE):
+def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
+    if reply_to_message.text and reply_to_message.text.startswith(ZERO_WIDTH_SPACE):
         logger.debug('found ZERO_WIDTH_SPACE.')
     else:
         logger.debug('no ZERO_WIDTH_SPACE.')
         return None
     # end if
 
-    if msg.entities and len(msg.entities) > 1 and msg.entities[0].offset == 0 and msg.entities[0].length == 1 and \
-        msg.entities[0].type in ("url", "text_mention"):
+    if reply_to_message.entities and len(reply_to_message.entities) > 1 and reply_to_message.entities[0].offset == 0 and reply_to_message.entities[0].length == 1 and \
+        reply_to_message.entities[0].type in ("url", "text_mention"):
         logger.debug('Is indeed a link.')
     else:
         logger.debug('no link at first position.')
         return None
     # end if
 
-    link = msg.entities[0]
+    link = reply_to_message.entities[0]
     if link.type == 'text_mention':
         logger.debug(f'got mention of user {link.user}.')
         return link.user.id
