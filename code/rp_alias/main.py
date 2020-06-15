@@ -5,6 +5,7 @@ from flask import Flask, url_for
 from typing import Union
 from datetime import datetime, timedelta
 from DictObject import DictObject
+from luckydonaldUtils.holder import Holder
 from luckydonaldUtils.logger import logging
 from luckydonaldUtils.encoding import to_native as n, to_binary as b
 from luckydonaldUtils.tg_bots.gitinfo import version_bp, version_tbp
@@ -24,6 +25,7 @@ from teleflask.messages import HTMLMessage
 from teleflask.server import Teleflask
 
 from .fake_reply import build_fake_reply
+from .anon_reply import build_reply_message, detect_anon_user_id
 from .secrets import API_KEY, HOSTNAME
 from .sentry import add_error_reporting
 
@@ -153,14 +155,27 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
     if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
         logger.debug('other user want to send something to us.')
-        rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
+        fwd_msg = rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
+        if fwd_msg.forward_from is None:
+            logger.debug(f'detected anon forward: {msg.chat.id}')
+        # end def
+        rp_bot.send_message(
+            chat_id=msg.chat.id,
+            text=build_reply_message(msg.chat.id, f"{msg.from_peer.first_name} {msg.from_peer.last_name}", msg.from_peer.username),
+            parse_mode='html',
+            reply_to_message_id=fwd_msg.message_id,
+        )
     else:
         # we wrote the bot
         logger.debug('owner wrote the bot.')
+        user_id_holder = Holder()
         if msg.reply_to_message and msg.reply_to_message.forward_from:
             # we replied to a forwarded message.
             logger.debug('owner replied to message.')
             copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
+        elif user_id_holder(detect_anon_user_id(msg)):
+            logger.debug('owner replied to anon_reply message.')
+            copy_message(chat_id=user_id_holder.get(), msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
         else:
             # we wrote the bot, not as reply -> return as if prefixed.
             logger.debug('owner wrote the bot, not as reply -> return as if prefixed.')
