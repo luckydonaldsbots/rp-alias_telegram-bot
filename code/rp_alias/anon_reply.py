@@ -19,6 +19,7 @@ LINK = '<a href="{link}">{label}</a>'
 
 ZERO_WIDTH_SPACE = "‎"
 ZERO_WIDTH_SPACE = "⤷ "
+ZERO_WIDTH_SPACE_LEN = len(ZERO_WIDTH_SPACE)
 INVISIBLE_LINK = LINK.format(link='{link}', label=ZERO_WIDTH_SPACE)
 
 USER_URL_TEMPLATE = "tg://user?id={user_id}"
@@ -43,28 +44,51 @@ def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
         logger.debug('no ZERO_WIDTH_SPACE.')
         return None
     # end if
-
-    if reply_to_message.entities and len(reply_to_message.entities) > 1 and reply_to_message.entities[0].offset == 0 and reply_to_message.entities[0].length == 1 and \
-        reply_to_message.entities[0].type in ("url", "text_mention"):
-        logger.debug('Is indeed a link.')
-    else:
-        logger.debug('no link at first position.')
+    if not reply_to_message.entities:
+        logger.debug('no entities')
+        return None
+    # end if
+    if not len(reply_to_message.entities) > 1:
+        logger.debug('not enough entities')
         return None
     # end if
 
-    link = reply_to_message.entities[0]
-    if link.type == 'text_mention':
-        logger.debug(f'got mention of user {link.user}.')
-        return link.user.id
+    entity = reply_to_message.entities[0]
+
+    if not entity.offset == 0:
+        logger.debug('offset not zero')
+        return None
+    # end if
+    if not entity.length == ZERO_WIDTH_SPACE_LEN:
+        logger.debug('length of entity wrong.')
+        return None
+    # end if
+    if not entity.type in ("url", "text_mention"):
+        logger.debug('wrong entity type')
+        return None
+    # end if
+    if not len(reply_to_message.entities) > 1:
+        logger.debug('not enough entities')
+        return None
+    # end if
+
+    logger.debug('Is indeed a link.')
+
+    if entity.type == 'text_mention':
+        logger.debug(f'got direct mention of user {entity.user}.')
+        return entity.user.id
     else:
-        assert link.type == 'url'
-        url = link.url
+        logger.debug(f'got tg:// link with url {entity.url!r}.')
+        assert entity.type == 'url'
+        url = entity.url
         m = USER_URL_REGEX.match(url)
         if not m:
             logger.debug('regex didn\'t match.')
             return None
         # end if
-        return m.groupdict().get('user_id', None)
+        user_id = m.groupdict().get('user_id', None)
+        logger.debug(f'got user via match: {user_id}.')
+        return user_id
     # end def
 # end def
 
