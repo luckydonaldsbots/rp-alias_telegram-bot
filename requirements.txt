@@ -17,7 +17,7 @@ flask
 raven[flask]
 
 # emoji
-emoji
+emoji==0.5.4
 
 # pymongo
 pymongo
