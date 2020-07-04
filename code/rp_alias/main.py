@@ -159,10 +159,16 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         if fwd_msg.forward_from is None:
             logger.debug(f'detected anon forward: {msg.chat.id}')
         # end def
+        user_name = ""
+        user_name += msg.from_peer.first_name if msg.from_peer.first_name else ""
+        user_name += " "
+        user_name += msg.from_peer.last_name if msg.from_peer.last_name else ""
+        user_name = user_name.strip()
+
         try:
             rp_bot.send_message(
                 chat_id=admin_user_id,
-                text=build_reply_message(msg.chat.id, f"{msg.from_peer.first_name} {msg.from_peer.last_name}", msg.from_peer.username),
+                text=build_reply_message(msg.chat.id, user_name, msg.from_peer.username),
                 parse_mode='html',
                 reply_to_message_id=fwd_msg.message_id,
             )
