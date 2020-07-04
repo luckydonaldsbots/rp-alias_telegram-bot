@@ -8,6 +8,8 @@ from luckydonaldUtils.logger import logging
 
 __author__ = 'luckydonald'
 
+from pytgbot.api_types.receivable.media import MessageEntity
+
 from pytgbot.api_types.receivable.updates import Message
 
 logger = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ def build_reply_message(user_id: int, user_name: str, username: Union[str, None]
     at_user_url = f"https://t.me/{username}" if username else user_url
     invisible_link = INVISIBLE_LINK.format(link=user_url)
     visible_link = LINK.format(link=at_user_url, label=escape(user_name))
-    return f"{invisible_link}Sent by user {visible_link}."
+    return f"{invisible_link}Sent by user {visible_link} (<code>{user_id}</code>)."
 
 
 # end def
@@ -48,12 +50,26 @@ def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
         logger.debug('no entities')
         return None
     # end if
-    if not len(reply_to_message.entities) > 1:
-        logger.debug('not enough entities')
+    if not len(reply_to_message.entities) > 0:
+        logger.debug('at least one entity')
         return None
     # end if
 
-    entity = reply_to_message.entities[0]
+    entity: MessageEntity = reply_to_message.entities[0]
+    if entity.type == "code" and len(reply_to_message.entities) == 1:
+        logger.debug('looks like code only')
+        number_str = reply_to_message.text[entity.offset: entity.offset + entity.length]
+        try:
+            return int(number_str)
+        except (ValueError, TypeError):
+            logger.debug(f'could not parse code: {number_str!r}')
+        # end try
+    # end if
+
+    if not len(reply_to_message.entities) > 1:
+        logger.debug('not enough entities for non-code')
+        return None
+    # end if
 
     if not entity.offset == 0:
         logger.debug('offset not zero')
