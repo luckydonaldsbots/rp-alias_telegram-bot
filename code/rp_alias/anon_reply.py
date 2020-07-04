@@ -34,9 +34,7 @@ def build_reply_message(user_id: int, user_name: str, username: Union[str, None]
     at_user_url = f"https://t.me/{username}" if username else user_url
     invisible_link = INVISIBLE_LINK.format(link=user_url)
     visible_link = LINK.format(link=at_user_url, label=escape(user_name))
-    return f"{invisible_link}Sent by user {visible_link} (<code>{user_id}</code>)."
-
-
+    return f"{invisible_link}Sent by user {visible_link} (<code>{user_id}</code>)."  # TODO: l18n
 # end def
 
 def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
