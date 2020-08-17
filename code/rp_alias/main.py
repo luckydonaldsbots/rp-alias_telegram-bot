@@ -164,6 +164,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
     if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
         logger.debug('other user want to send something to us.')
+        fwd_msg = None
         try:
             fwd_msg = rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
         except TgApiServerException as e:
