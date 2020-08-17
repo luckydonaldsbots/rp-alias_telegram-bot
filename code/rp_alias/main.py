@@ -449,7 +449,7 @@ def cmd_set_welcome(update, text):
         webhook_url = f"https://{HOSTNAME}{webhook_url}"
         logger.debug(f'setting webhook to {webhook_url!r}')
         rp_bot.set_webhook(webhook_url)
-        return (
+        return HTMLMessage(
             f"Successfully registered {rp_me.first_name}.\n"
             f"Start any message with <b>{escape(prefix)!r}</b> to have it be echoed by the bot.\n"
             f"\n"
