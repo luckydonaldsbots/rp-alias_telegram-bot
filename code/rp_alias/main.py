@@ -158,7 +158,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
                 bot.send_message(HTMLMessage(f'Someone tried to PM you via @{rp_bot.username}. Please make sure you send <code>/start</code> to your bot for this feature to work.'), reply_chat=admin_user_id, reply_msg=None)
             except TgApiServerException as e:
                 logger.warning('failed to report fail of /start greeting message.', exc_info=True)
-                return None
+                return 'OKish'
             # end try
         # end try
     # end if
@@ -174,12 +174,12 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
                 bot.send_message(HTMLMessage(f'Someone tried to PM you via @{rp_bot.username}. Please make sure you send <code>/start</code> to your bot for this feature to work.'), reply_chat=admin_user_id, reply_msg=None)
             except TgApiServerException as e:
                 logger.warning('failed to report fail of forward message.', exc_info=True)
-                return None
+                return 'OKish'
             # end try
         # end try
         if fwd_msg or fwd_msg.forward_from is None:
             logger.debug(f'detected anon forward: {msg.chat.id}')
-            return None
+            return 'OKish'
         # end if
         user_name = ""
         user_name += msg.from_peer.first_name if msg.from_peer.first_name else ""
