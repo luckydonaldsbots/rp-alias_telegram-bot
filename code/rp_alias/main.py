@@ -150,7 +150,11 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         reply_chat, reply_msg = bot.msg_get_reply_params(update)
         # noinspection PyProtectedMember
         send_msg._apply_update_receiver(receiver=reply_chat, reply_id=reply_msg)
-        send_msg.send(rp_bot)
+        try:
+            send_msg.send(rp_bot)
+        except TgApiServerException as e:
+            logger.warning('failed to post /start greeting message.', exc_info=True)
+        # end try
     # end if
     if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
