@@ -177,9 +177,9 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
                 return 'OKish'
             # end try
         # end try
-        if not fwd_msg or fwd_msg.forward_from is None:
+        if fwd_msg.forward_from is None:
             logger.debug(f'detected anon forward: {msg.chat.id}')
-            return 'OKish'
+            # only log it, we send the anon reply thing in any case.
         # end if
         user_name = ""
         user_name += msg.from_peer.first_name if msg.from_peer.first_name else ""
