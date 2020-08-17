@@ -411,7 +411,7 @@ def help_cmd(update: Update, text: str):
         f'<i>Usually that should contain a description about the character, maybe a @username of the owner for direct contact and a "Powered by</i> @{bot.username}<i>" would be really supportive!</i>\n'
         '\n'
         '<b>5.</b> After that, <u>come back to this bot</u> and use /add_bot to finally let it listen and respond to messages.\n'
-        '<b>6.</b> To test, you should then start your bot (either there\'s a big start button where usually the text box would be, or send /start to it). It should respond to your messages there.''
+        '<b>6.</b> To test, you should then start your bot (either there\'s a big start button where usually the text box would be, or send /start to it). It should respond to your messages there.'
     )
 # end def
 
