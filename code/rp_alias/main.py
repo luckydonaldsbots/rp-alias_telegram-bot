@@ -465,7 +465,8 @@ def cmd_set_welcome(update, text):
                 f"\n"
                 f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} as admin in the chat you're "
                 f"roleplaying in, it will delete your original message (the one with the prefix) automatically, so you don't end up with the text always being there twice."
-        )
+            ),
+        ]
     except TgApiServerException as e:
         return f"Error: {e!s}"
     # end try
