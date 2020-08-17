@@ -154,12 +154,26 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
             send_msg.send(rp_bot)
         except TgApiServerException as e:
             logger.warning('failed to post /start greeting message.', exc_info=True)
+            try:
+                bot.send_message(HTMLMessage(f'Someone tried to PM you via @{rp_bot.username}. Please make sure you send <code>/start</code> to your bot for this feature to work.'), reply_chat=admin_user_id, reply_msg=None)
+            except TgApiServerException as e:
+                logger.warning('failed to report fail of /start greeting message.', exc_info=True)
+            # end try
         # end try
     # end if
     if msg.from_peer.id != admin_user_id:
         # other user want to send something to us.
         logger.debug('other user want to send something to us.')
-        fwd_msg = rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
+        try:
+            fwd_msg = rp_bot.forward_message(admin_user_id, from_chat_id=msg.chat.id, message_id=msg.message_id)
+        except TgApiServerException as e:
+            logger.warning('failed to forward message.', exc_info=True)
+            try:
+                bot.send_message(HTMLMessage(f'Someone tried to PM you via @{rp_bot.username}. Please make sure you send <code>/start</code> to your bot for this feature to work.'), reply_chat=admin_user_id, reply_msg=None)
+            except TgApiServerException as e:
+                logger.warning('failed to report fail of forward message.', exc_info=True)
+            # end try
+        # end try
         if fwd_msg.forward_from is None:
             logger.debug(f'detected anon forward: {msg.chat.id}')
         # end def
