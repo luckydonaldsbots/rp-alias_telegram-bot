@@ -183,7 +183,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
             # we replied to a forwarded message.
             logger.debug('owner replied to message.')
             copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
-        elif user_id_holder(detect_anon_user_id(msg.reply_to_message)):
+        elif msg.reply_to_message and user_id_holder(detect_anon_user_id(msg.reply_to_message)):
             logger.debug('owner replied to anon_reply message.')
             copy_message(chat_id=user_id_holder.get(), msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
         else:

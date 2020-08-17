@@ -38,6 +38,9 @@ def build_reply_message(user_id: int, user_name: str, username: Union[str, None]
 # end def
 
 def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
+    if not reply_to_message:
+        logger.debug('no reply.')
+        return None
     if reply_to_message.text and reply_to_message.text.startswith(ZERO_WIDTH_SPACE):
         logger.debug('found ZERO_WIDTH_SPACE.')
     else:
