@@ -410,7 +410,8 @@ def help_cmd(update: Update, text: str):
         '<b>4.</b> It is helpful to others if you add a <u>about text</u> (bio) for your bot with <code>/setabouttext</code>.\n'
         f'<i>Usually that should contain a description about the character, maybe a @username of the owner for direct contact and a "Powered by</i> @{bot.username}<i>" would be really supportive!</i>\n'
         '\n'
-        '<b>5.</b> After that, <u>come back to this bot</u> and use /add_bot to finally let it listen and respond to messages.'
+        '<b>5.</b> After that, <u>come back to this bot</u> and use /add_bot to finally let it listen and respond to messages.\n'
+        '<b>6.</b> To test, you should then start your bot (either there\'s a big start button where usually the text box would be, or send /start to it). It should respond to your messages there.''
     )
 # end def
 
@@ -449,15 +450,21 @@ def cmd_set_welcome(update, text):
         webhook_url = f"https://{HOSTNAME}{webhook_url}"
         logger.debug(f'setting webhook to {webhook_url!r}')
         rp_bot.set_webhook(webhook_url)
-        return HTMLMessage(
+        return [
+            HTMLMessage(
             f"Successfully registered {rp_me.first_name}.\n"
-            f"Start any message with <b>{escape(prefix)!r}</b> to have it be echoed by the bot.\n"
-            f"\n"
-            f"You can then reply with <code>/edit NEW TEXT</code> to a post by the bot to replace text or caption with <code>NEW TEXT</code>.\n"
-            f"Reply <code>/delete</code> to a message of the bot to have it deleted.\n"
-            f"\n"
-            f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} as admin in the chat you're "
-            f"roleplaying in, it will delete your original message (the one with the prefix) automatically."
+            f"Please now start your own bot (@{rp_me.username}) by sending <code>/start</code> to it.\n"
+            ),
+            HTMLMessage(
+                f"<b>How to use our bot @{rp_me.username} in groups</b> (The bot needs to be member of the group, additional admin to clean up your messages)\n"
+                f""
+                f"Start any message with <b>{escape(prefix)!r}</b> to have it be echoed by the bot.\n"
+                f"\n"
+                f"You can then reply with <code>/edit NEW TEXT</code> to a post by the bot to replace text or caption with <code>NEW TEXT</code>.\n"
+                f"Reply <code>/delete</code> to a message of the bot to have it deleted.\n"
+                f"\n"
+                f"If you allow either your bot @{rp_me.username} or this bot @{bot.username} as admin in the chat you're "
+                f"roleplaying in, it will delete your original message (the one with the prefix) automatically, so you don't end up with the text always being there twice."
         )
     except TgApiServerException as e:
         return f"Error: {e!s}"
