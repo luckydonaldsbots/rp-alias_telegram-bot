@@ -192,7 +192,7 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
                 chat_id=admin_user_id,
                 text=build_reply_message(msg.chat.id, user_name, msg.from_peer.username),
                 parse_mode='html',
-                reply_to_message_id=fwd_msg.message_id,
+                reply_to_message_id=fwd_msg.message_id if fwd_msg else None,
             )
         except TgApiServerException as e:
             logger.warning('failed to post anon_reply message.', exc_info=True)
