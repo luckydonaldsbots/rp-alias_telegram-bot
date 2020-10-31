@@ -106,15 +106,16 @@ def rp_bot_webhooks(admin_user_id: int, base64_prefix: str, base64_api_key: str)
 
     assert update.message
     msg: TGMessage = update.message
+
+    if msg.chat.type == 'private':
+        return process_private_chat(update, admin_user_id, prefix, rp_bot)
+    # end if
     if not msg.text and not msg.caption:
         logger.info('not an message with text/caption')
         return "OK"
     # end if
 
-    if msg.chat.type == 'private':
-        return process_private_chat(update, admin_user_id, prefix, rp_bot)
-    else:
-        return process_public_chat(msg, admin_user_id, prefix, rp_bot)
+    return process_public_chat(msg, admin_user_id, prefix, rp_bot)
     # end def
 # end def
 
