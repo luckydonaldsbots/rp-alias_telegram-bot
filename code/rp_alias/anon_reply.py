@@ -37,6 +37,7 @@ def build_reply_message(user_id: int, user_name: str, username: Union[str, None]
     return f"{invisible_link}Sent by user {visible_link} (<code>{user_id}</code>)."  # TODO: l18n
 # end def
 
+
 def detect_anon_user_id(reply_to_message: Message) -> Union[None, int]:
     if not reply_to_message:
         logger.debug('no reply.')
