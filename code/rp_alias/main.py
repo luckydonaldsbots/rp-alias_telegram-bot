@@ -395,8 +395,11 @@ def failsafe_multibot_delete(rp_bot, message_id, chat_id, of_something='message'
 
 def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str, None] = None):
     if not text:
-        text = escape(msg.text) if msg.text else msg.caption
+        text = msg.text if msg.text else msg.caption
     # end def
+    if text:
+        text = escape(text)
+    # end if
     if msg.text:
         return rp_bot.send_message(
             text=text, parse_mode='html',
@@ -407,6 +410,46 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
     if msg.photo:
         return rp_bot.send_photo(
             photo=msg.photo[0].file_id,
+            chat_id=chat_id,
+            caption=text, parse_mode='html',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.sticker:
+        return rp_bot.send_sticker(
+            sticker=msg.sticker.file_id,
+            chat_id=chat_id,
+            # caption=text, parse_mode='html',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.animation:
+        return rp_bot.send_animation(
+            animation=msg.animation.file_id,
+            chat_id=chat_id,
+            caption=text, parse_mode='html',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.video:
+        return rp_bot.send_video(
+            video=msg.video.file_id,
+            chat_id=chat_id,
+            caption=text, parse_mode='html',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.video_note:
+        return rp_bot.send_video_note(
+            video_note=msg.video_note.file_id,
+            chat_id=chat_id,
+            # caption=text, parse_mode='html',
+            disable_notification=False, reply_to_message_id=reply_to_message_id,
+        )
+    # end if
+    if msg.voice:
+        return rp_bot.send_voice(
+            voice=msg.voice.file_id,
             chat_id=chat_id,
             caption=text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
