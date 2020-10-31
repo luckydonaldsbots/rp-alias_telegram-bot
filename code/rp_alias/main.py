@@ -144,8 +144,8 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
             rp_me = rp_bot.get_me()
             send_msg = HTMLMessage(
                 f'<i>Greetings.\n'
-                f'Your communication with the owner of <b>{escape(rp_me.first_name)!r}</b> is now ready.</i>\n'
-                f'<i>PS: You can set up your own with</i> @{bot.username}<i>.</i>'
+                f'Your communication with the owner of this <b>{escape(rp_me.first_name)!r}</b> bot is now ready.</i>\n'
+                f'<i>PS: You can set up your own roleplay proxy with</i> @{bot.username}<i>.</i>'
             )
         # end if
         reply_chat, reply_msg = bot.msg_get_reply_params(update)
