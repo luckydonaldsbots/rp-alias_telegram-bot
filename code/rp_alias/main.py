@@ -202,17 +202,34 @@ def process_private_chat(update: Update, admin_user_id: int, prefix: str, rp_bot
         # we wrote the bot
         logger.debug('owner wrote the bot.')
         user_id_holder = Holder()
-        if msg.reply_to_message and msg.reply_to_message.forward_from:
-            # we replied to a forwarded message.
-            logger.debug('owner replied to message.')
-            copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
-        elif msg.reply_to_message and user_id_holder(detect_anon_user_id(msg.reply_to_message)):
-            logger.debug('owner replied to anon_reply message.')
-            copy_message(chat_id=user_id_holder.get(), msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
-        else:
-            # we wrote the bot, not as reply -> return as if prefixed.
-            logger.debug('owner wrote the bot, not as reply -> return as if prefixed.')
-            copy_message(chat_id=msg.from_peer.id, msg=msg, reply_to_message_id=msg.message_id, rp_bot=rp_bot)
+        copy = None
+        try:
+            if msg.reply_to_message and msg.reply_to_message.forward_from:
+                # we replied to a forwarded message.
+                logger.debug('owner replied to message.')
+                copy = copy_message(chat_id=msg.reply_to_message.forward_from.id, msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
+            elif msg.reply_to_message and user_id_holder(detect_anon_user_id(msg.reply_to_message)):
+                logger.debug('owner replied to anon_reply message.')
+                copy = copy_message(chat_id=user_id_holder.get(), msg=msg, reply_to_message_id=None, rp_bot=rp_bot)
+            else:
+                # we wrote the bot, not as reply -> return as if prefixed.
+                logger.debug('owner wrote the bot, not as reply -> return as if prefixed.')
+                copy = copy_message(chat_id=msg.from_peer.id, msg=msg, reply_to_message_id=msg.message_id, rp_bot=rp_bot)
+            # end if
+        except:
+            logger.warning('reply forward message failed.', exc_info=True)
+        # end try
+
+        try:
+            rp_bot.send_message(
+                chat_id=msg.chat.id,
+                text="<i>Reply sent to user.</i>" if copy else '<i>Failed to send to user.</i>',
+                parse_mode='html',
+                disable_notification=True, reply_to_message_id=msg.message_id,
+            )
+        except:
+            logger.warning('reply success message failed.', exc_info=True)
+        # end try
         # end if
     # end if
     return 'OK'
