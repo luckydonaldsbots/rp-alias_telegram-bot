@@ -371,9 +371,9 @@ def process_public_chat(msg: TGMessage, admin_user_id: int, prefix: str, rp_bot:
 # end def
 
 
-def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, text):
+def message_echo_and_delete_original(chat_id, message_id, msg, reply_to_message_id, rp_bot, html_text):
     try:
-        copy_message(chat_id, msg, reply_to_message_id, rp_bot, text)
+        copy_message(chat_id, msg, reply_to_message_id, rp_bot, html_text)
     except TgApiServerException as e:
         logger.warn('sending failed', exc_info=True)
     # end try
@@ -395,16 +395,14 @@ def failsafe_multibot_delete(rp_bot, message_id, chat_id, of_something='message'
 # end def
 
 
-def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str, None] = None):
-    if not text:
-        text = msg.text if msg.text else msg.caption
+def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, html_text: Union[str, None] = None):
+    if not html_text:
+        html_text = msg.text if msg.text else msg.caption
+        html_text = escape(html_text)
     # end def
-    if text:
-        text = escape(text)
-    # end if
     if msg.text:
         return rp_bot.send_message(
-            text=text, parse_mode='html',
+            text=html_text, parse_mode='html',
             chat_id=chat_id,
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
@@ -413,7 +411,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_photo(
             photo=msg.photo[0].file_id,
             chat_id=chat_id,
-            caption=text, parse_mode='html',
+            caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -421,7 +419,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_sticker(
             sticker=msg.sticker.file_id,
             chat_id=chat_id,
-            # caption=text, parse_mode='html',
+            # caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -429,7 +427,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_animation(
             animation=msg.animation.file_id,
             chat_id=chat_id,
-            caption=text, parse_mode='html',
+            caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -437,7 +435,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_video(
             video=msg.video.file_id,
             chat_id=chat_id,
-            caption=text, parse_mode='html',
+            caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -445,7 +443,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_video_note(
             video_note=msg.video_note.file_id,
             chat_id=chat_id,
-            # caption=text, parse_mode='html',
+            # caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -453,7 +451,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_voice(
             voice=msg.voice.file_id,
             chat_id=chat_id,
-            caption=text, parse_mode='html',
+            caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
@@ -461,7 +459,7 @@ def copy_message(chat_id, msg, reply_to_message_id, rp_bot: Bot, text: Union[str
         return rp_bot.send_document(
             document=msg.document.file_id,
             chat_id=chat_id,
-            caption=text, parse_mode='html',
+            caption=html_text, parse_mode='html',
             disable_notification=False, reply_to_message_id=reply_to_message_id,
         )
     # end if
